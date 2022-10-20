@@ -1,7 +1,14 @@
+#ifndef REGISTER_H
+#define REGISTER_H
+
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct CPU_STRUCT
+#define MM_LEN 1000
+#define INST_LEN 100
+
+
+typedef struct REG_STRUCT
 {
     union
     {
@@ -102,4 +109,12 @@ typedef struct CPU_STRUCT
         uint32_t eip;
         uint64_t rip;
     };
-} cpu_t;
+} reg_t;
+
+
+// ===========================
+// CPU
+reg_t reg;
+
+
+#endif // REGISTER_H
