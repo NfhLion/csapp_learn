@@ -18,6 +18,7 @@ typedef enum OD_TYPE
     IMM,
     REG,
     MM_IMM,
+    MM_REG,
     MM_IM_REG,
     MM_REG1_REG2,
     MM_IM_REG1_REG2,
@@ -46,6 +47,7 @@ typedef struct INSTRUCT_STRUCT
     od_t dst; // target
 } inst_t;
 
-static uint64_t decode_od(od_t od);
+// 指令周期函数
+void instruction_cycle();
 
 #endif // INSTRUCTION_H

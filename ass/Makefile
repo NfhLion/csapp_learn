@@ -8,6 +8,7 @@ SRC = ./src
 CODE = ./src/memory/instruction.c \
 	   ./src/disk/code.c \
 	   ./src/memory/dram.c \
+	   ./src/cpu/mmu.c \
 	   ./src/main.c
 
 .PHONY: run main

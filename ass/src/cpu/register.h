@@ -111,8 +111,6 @@ typedef struct REG_STRUCT
     };
 } reg_t;
 
-
-// ===========================
 // CPU
 reg_t reg;
 
