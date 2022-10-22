@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #define MM_LEN 1000
-#define INST_LEN 100
 
 
 typedef struct REG_STRUCT

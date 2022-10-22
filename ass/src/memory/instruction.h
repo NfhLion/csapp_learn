@@ -4,17 +4,25 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define NUM_INSTRTYPE 30
+
 // 操作
 typedef enum OP
 {
-    MOV,
-    PUSH,
-    CALL
+    mov_reg_reg,
+    mov_reg_mem,
+    mov_mem_reg,
+    push_reg,
+    pop_reg,
+    call,
+    ret,
+    add_reg_reg
 } op_t;
 
 // 寻址方法
 typedef enum OD_TYPE
 {
+    EMPTY,
     IMM,
     REG,
     MM_IMM,
@@ -28,6 +36,7 @@ typedef enum OD_TYPE
     MM_IM_REG1_REG2_S
 } od_type_t;
 
+// 操作数
 typedef struct OD
 {
     /* data */
@@ -45,9 +54,21 @@ typedef struct INSTRUCT_STRUCT
     op_t op;  // mov push call
     od_t src; // source
     od_t dst; // target
+    char code[100]; // str 
 } inst_t;
+
+typedef void (*handler_t)(uint64_t, uint64_t);
+
+handler_t handler_table[NUM_INSTRTYPE];
+
+// 初始化指令函数集
+void init_handler_table();
 
 // 指令周期函数
 void instruction_cycle();
+
+// 指令运算函数集
+void add_reg_reg_handler(uint64_t src, uint64_t dst);
+void mov_reg_reg_handler(uint64_t src, uint64_t dst);
 
 #endif // INSTRUCTION_H
