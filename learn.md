@@ -6,5 +6,11 @@
 ### GDB
 1. 查看当前汇编: `disas`
 2. 当前汇编下前进几行: `ni + 行数`
-3. 查看寄存器：`info r`
-4. 查看内存: https://blog.csdn.net/xiaozhiwise/article/details/122732433?
+3. 进入当前指令：`si`
+4. 查看寄存器：`info r`
+5. 查看内存: https://blog.csdn.net/xiaozhiwise/article/details/122732433?
+
+### 汇编
+1. `rip`是和`text段`有关的寄存器。
+2. `rsp`是和`stack`有关的寄存器。
+3. `rbp ===> rsp`之间的是和当前被调函数有关的内存。

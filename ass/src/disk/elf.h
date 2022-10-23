@@ -1,3 +1,6 @@
+#ifndef ELF_H
+#define ELF_H
+
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -7,3 +10,5 @@
 
 //
 inst_t program[INST_LEN];
+
+#endif // ELF_H

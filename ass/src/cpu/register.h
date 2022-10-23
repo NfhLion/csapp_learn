@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define MM_LEN 1000
-
-
 typedef struct REG_STRUCT
 {
     union

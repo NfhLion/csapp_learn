@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include "disk/elf.h"
 #include "cpu/register.h"
@@ -20,19 +21,52 @@ int main(int argc, char *argv[]) {
     reg.rbp = 0x7ffffffee210;
     reg.rsp = 0x7ffffffee1f0;
     
-    reg.rip = *(uint64_t *)&(program[11]);
+    reg.rip = (uint64_t)&(program[11]);
 
     // init memory
-    mm[va2pa(0x7ffffffee210)] = 0x08000660;         // rbp
-    mm[va2pa(0x7ffffffee208)] = 0x0;
-    mm[va2pa(0x7ffffffee200)] = 0xabcd;
-    mm[va2pa(0x7ffffffee1f8)] = 0x12340000;
-    mm[va2pa(0x7ffffffee1f0)] = 0x08000660;         // rsp
+    write64bits_dram(va2pa(0x7ffffffee210), 0x08000660);    // rbp
+    write64bits_dram(va2pa(0x7ffffffee208), 0x0);
+    write64bits_dram(va2pa(0x7ffffffee200), 0xabcd);
+    write64bits_dram(va2pa(0x7ffffffee1f8), 0x12340000);
+    write64bits_dram(va2pa(0x7ffffffee1f0), 0x08000660);    // rsp
+
+    print_register();
+    print_stack();
 
     // run inst
-    
+    for (int i = 0; i < 12; i++) {
+        instruction_cycle();
+        print_register();
+        print_stack();
+    }
 
-    // match out
+    // match register
+    int match = 1;
+    match = match && (reg.rax == 0x12340000);
+    match = match && (reg.rbx == 0x0);
+    match = match && (reg.rcx == 0x8000660);
+    match = match && (reg.rdx == 0xabcd);
+    match = match && (reg.rsi == 0x7ffffffee2f8);
+    match = match && (reg.rdi == 0x1);
+    match = match && (reg.rbp == 0x7ffffffee210);
+    match = match && (reg.rsp == 0x7ffffffee1f0);
+    if (match == 1) {
+        printf("register match\n");
+    } else {
+        printf("register not match\n");
+    }
+
+    // match memeory
+    match = match && (read64bits_dram(va2pa(0x7ffffffee210)) == 0x08000660);
+    match = match && (read64bits_dram(va2pa(0x7ffffffee208)) == 0x1234abcd);
+    match = match && (read64bits_dram(va2pa(0x7ffffffee200)) == 0xabcd);
+    match = match && (read64bits_dram(va2pa(0x7ffffffee1f8)) == 0x12340000);
+    match = match && (read64bits_dram(va2pa(0x7ffffffee1f0)) == 0x08000660);
+    if (match == 1) {
+        printf("memeory match\n");
+    } else {
+        printf("memeory not match\n");
+    }
 
     return 0;
 }
