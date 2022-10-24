@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     print_stack();
 
     // run inst
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 7; i++) {
         instruction_cycle();
         print_register();
         print_stack();

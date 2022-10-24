@@ -58,13 +58,14 @@ void print_stack() {
     for (int i = 0; i < 2 * n; ++i) {
         uint64_t *ptr = (uint64_t *)(high - i);
         printf("0x%016lx : %16lx", stack_start, (uint64_t)*ptr);
+        if (reg.rbp == stack_start) {
+            printf(" < === rbp");
+        }
         stack_start -= 8;
         if (i == n) {
             printf(" < === rsp");
         }
-        if (reg.rbp == stack_start) {
-            printf(" < === rbp");
-        }
+
         printf("\n");
     }
 }

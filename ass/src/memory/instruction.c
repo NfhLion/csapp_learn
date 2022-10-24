@@ -83,7 +83,7 @@ void mov_mem_reg_handler(uint64_t src, uint64_t dst) {
 void push_reg_handler(uint64_t src, uint64_t dst) {
     reg.rsp = reg.rsp - 8;
     write64bits_dram(
-        va2pa(reg.rip),
+        va2pa(reg.rsp),
         *(uint64_t *)src
     );
     reg.rip = reg.rip + sizeof(inst_t);
