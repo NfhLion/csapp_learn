@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     print_stack();
 
     // run inst
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 15; i++) {
         instruction_cycle();
         print_register();
         print_stack();
@@ -42,12 +42,12 @@ int main(int argc, char *argv[]) {
 
     // match register
     int match = 1;
-    match = match && (reg.rax == 0x12340000);
+    match = match && (reg.rax == 0x1234abcd);
     match = match && (reg.rbx == 0x0);
     match = match && (reg.rcx == 0x8000660);
-    match = match && (reg.rdx == 0xabcd);
-    match = match && (reg.rsi == 0x7ffffffee2f8);
-    match = match && (reg.rdi == 0x1);
+    match = match && (reg.rdx == 0x12340000);
+    match = match && (reg.rsi == 0xabcd);
+    match = match && (reg.rdi == 0x12340000);
     match = match && (reg.rbp == 0x7ffffffee210);
     match = match && (reg.rsp == 0x7ffffffee1f0);
     if (match == 1) {

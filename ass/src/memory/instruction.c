@@ -44,6 +44,7 @@ void init_handler_table() {
     handler_table[call] = &call_handler;
     handler_table[push_reg] = &push_reg_handler;
     handler_table[pop_reg] = &pop_reg_handler;
+    handler_table[ret] = &ret_handler;
 }
 
 void instruction_cycle() {
@@ -90,7 +91,10 @@ void push_reg_handler(uint64_t src, uint64_t dst) {
 }
 
 void pop_reg_handler(uint64_t src, uint64_t dst) {
-
+    // src: rbp
+    *(uint64_t *)src = read64bits_dram(va2pa(reg.rsp));
+    reg.rsp = reg.rsp + 8;
+    reg.rip = reg.rip + sizeof(inst_t);
 }
 
 void call_handler(uint64_t src, uint64_t dst) {
@@ -108,4 +112,10 @@ void add_reg_reg_handler(uint64_t src, uint64_t dst) {
     // add %rax %rbx (src = &rax, dst = &rbx)
     *(uint64_t *)dst = *(uint64_t *)dst + *(uint64_t *)src;
     reg.rip = reg.rip + sizeof(inst_t);
+}
+
+void ret_handler(uint64_t src, uint64_t dst) {
+    uint64_t ret_val = read64bits_dram(va2pa(reg.rsp));
+    reg.rsp += 8;
+    reg.rip = ret_val;
 }
