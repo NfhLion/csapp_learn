@@ -34,7 +34,7 @@ void print_register(core_t *cr) {
             reg.rsi, reg.rdi, reg.rbp, reg.rsp);
     printf("rip = %16lx\n", cr->rip);
 	printf("CF = %u\tZF = %u\tSF = %u\tOF = %u\n",
-        cr->CF, cr->ZF, cr->SF, cr->OF);
+        cr->flags.CF, cr->flags.ZF, cr->flags.SF, cr->flags.OF);
 }
 
 void print_stack(core_t *cr) {

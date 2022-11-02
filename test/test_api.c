@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
     char *str_num = argv[1];
     uint64_t num = string2uint(str_num);
     printf("%ld\n", num);
-    printf("%d\n", uint2float(num));
+    //printf("%d\n", uint2float(num));
 
     return 0;
 }
