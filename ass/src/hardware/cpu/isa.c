@@ -176,28 +176,157 @@ static void parse_instruction(const char *str, inst_t *inst, core_t *cr) {
 
 // parse the string assembly operand to od_t instance
 static void parse_operand(const char *str, od_t *od, core_t *cr) {
-
+    // str: the stripped compact operand string: turned to lower cases before parsing
+    // od: the data structure to store operand
     od->type = EMPTY;
     od->imm = 0;
     od->scal = 0;
     od->reg1 = 0;
     od->reg2 = 0;
 
-    size_t str_len = strlen(str);
-    if (str_len == 0) {
+    int str_len = strlen(str);
+    if (str_len == 0)
+    {
+        // empty operand
         return;
-    }
-
-    if (str[0] == '$') {
+    }    
+    
+    // parse the operand string
+    if (str[0] == '$')
+    {
         // immediate number
         od->type = IMM;
-        od->imm = string2uint_range(&str[1], 1, -1);
-    } else if(str[0] == '%') {
+        // try to parse the immediate number 64
+        // condition short cut would not bring extra burden
+        od->imm = string2uint_range(str, 1, -1);
+    }
+    else if (str[0] == '%')
+    {
         // register
         od->type = REG;
+        // match the correct register name
         od->reg1 = reflect_register(str, cr);
-    } else {
-        // memory access
+        return;
+    }
+    else
+    {
+        // should be a memory format, but check it
+        // split imm(reg1,reg2,scal)
+        char imm[64] = {'\0'};
+        int imm_len = 0;
+        char reg1[8] = {'\0'};
+        int reg1_len = 0;
+        char reg2[8] = {'\0'};
+        int reg2_len = 0;
+        char scal[2] = {'\0'};
+        int scal_len = 0;
+
+        int count_parentheses = 0;      // ()
+        int count_comma = 0;            // ,
+        // scan
+        for (int i = 0; i < str_len; ++ i)
+        {
+            if (str[i] == '(' || str[i] == ')')
+            {
+                count_parentheses ++;
+                continue;
+            }            
+            else if (str[i] == ',')
+            {
+                count_comma ++;
+                continue;
+            }
+            else
+            {
+                if (count_parentheses == 0)
+                {
+                    // imm
+                    imm[imm_len] = str[i];
+                    imm_len ++;
+                }
+                else if (count_parentheses == 1)
+                {
+                    if (count_comma == 0)
+                    {
+                        // ...(reg1
+                        reg1[reg1_len] = str[i];
+                        reg1_len ++;
+                    }
+                    else if (count_comma == 1)
+                    {
+                        // ...(...,reg2
+                        reg2[reg2_len] = str[i];
+                        reg2_len ++;
+                    }
+                    else if (count_comma == 2)
+                    {
+                        // ...(...,...,scal
+                        scal[scal_len] = str[i];
+                        scal_len ++;
+                    }
+                }
+            }
+        }
+
+        // parse imm
+        if (imm_len > 0)
+        {
+            od->imm = string2uint(imm);
+            if (count_parentheses == 0)
+            {
+                // imm
+                od->type = MEM_IMM;
+                return;
+            }
+        }
+        // parse scale
+        if (scal_len > 0)
+        {
+            od->imm = string2uint(scal);
+            if (od->scal != 1 && od->scal != 2 && od->scal != 4 && od->scal != 8)
+            {
+                debug_printf(DEBUG_PARSEINST, "parse operand %s\n    scale number %s must be 1,2,4,8\n", scal);
+                exit(0);
+            }
+        }
+        // parse reg1
+        if (reg1_len > 0)
+        {
+            od->reg1 = reflect_register(reg1, cr);
+        }
+        // parse reg2
+        if (reg2_len > 0)
+        {
+            od->reg2 = reflect_register(reg2, cr);
+        }
+
+        // set types
+        if (count_comma == 0)
+        {
+            // (r)
+            od->type = MEM_REG1;
+        }
+        else if (count_comma == 1)
+        {
+            // (r,r)
+            od->type = MEM_REG1_REG2;
+        }
+        else if (count_comma == 2)
+        {
+            if (reg1_len == 0)
+            {
+                // (,r,s)
+                od->type = MEM_REG2_SCAL;
+            }
+            else
+            {
+                // (r,r,s)
+                od->type = MEM_REG1_REG2_SCAL;
+            }
+        }
+        // bias 1 for MEM_IMM_[.*]
+        if (imm_len > 0)
+        od->type ++;
     }
 }
 
