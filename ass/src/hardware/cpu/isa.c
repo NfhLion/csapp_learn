@@ -171,7 +171,103 @@ static uint64_t decode_operand(od_t *od) {
 }
 
 static void parse_instruction(const char *str, inst_t *inst, core_t *cr) {
+    char op_str[64] = {'\0'};
+    int op_len = 0;
+    char src_str[64] = {'\0'};
+    int src_len = 0;
+    char dst_str[64] = {'\0'};
+    int dst_len = 0;
 
+    char c;
+    int count_parentheses = 0;
+    int state = 0;
+    int i = 0;
+
+    for (i = 0; i < strlen(str); ++i) {
+        
+        c = str[i];
+        if (c == '(' || c == ')') {
+            count_parentheses++;
+        }
+
+        if (state == 0 && c != ' ') {
+            state = 1;
+        } else if (state == 1 && c == ' ') {
+            state = 2;
+            continue;
+        } else if (state == 2 && c != ' ') {
+            state = 3;
+        } else if (state == 3 && c == ',' && (count_parentheses == 0 || count_parentheses == 2)) {
+            state = 4;
+            continue;
+        } else if (state == 4 && c != ',' && c != ' ') {
+            state = 5;
+        } else if (state == 5 && c == ' ') {
+            state = 6;
+            continue;
+        }
+
+        if (state == 1) {
+            op_str[op_len] = c;
+            op_len++;
+        } else if (state == 3) {
+            src_str[src_len] = c;
+            src_len++;
+        } else if (state == 5) {
+            dst_str[dst_len] = c;
+            dst_len++;
+        }
+    }
+
+    parse_operand(src_str, &(inst->src), cr);
+    parse_operand(dst_str, &(inst->dst), cr);
+
+    if (strcmp(op_str, "mov") == 0 || strcmp(op_str, "movq") == 0)
+    {
+        inst->op = INST_MOV;
+    }
+    else if (strcmp(op_str, "push") == 0)
+    {
+        inst->op = INST_PUSH;
+    }
+    else if (strcmp(op_str, "pop") == 0)
+    {
+        inst->op = INST_POP;
+    }
+    else if (strcmp(op_str, "leaveq") == 0)
+    {
+        inst->op = INST_LEAVE;
+    }
+    else if (strcmp(op_str, "callq") == 0)
+    {
+        inst->op = INST_CALL;
+    }
+    else if (strcmp(op_str, "retq") == 0)
+    {
+        inst->op = INST_RET;
+    }
+    else if (strcmp(op_str, "add") == 0)
+    {
+        inst->op = INST_ADD;
+    }
+    else if (strcmp(op_str, "sub") == 0)
+    {
+        inst->op = INST_SUB;
+    }
+    else if (strcmp(op_str, "cmpq") == 0)
+    {
+        inst->op = INST_CMP;
+    }
+    else if (strcmp(op_str, "jne") == 0)
+    {
+        inst->op = INST_JNE;
+    }
+    else if (strcmp(op_str, "jmp") == 0)
+    {
+        inst->op = INST_JMP;
+    }
+
+    debug_printf(DEBUG_PARSEINST, "[%s (%d)] [%s (%d)] [%s (%d)]\n", op_str, inst->op, src_str, inst->src.type, dst_str, inst->dst.type);
 }
 
 // parse the string assembly operand to od_t instance
