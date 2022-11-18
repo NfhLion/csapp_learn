@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     TestAddFunctionCallAndComputation();
     
     // TestParsingOperand();
-    TestParsingInstruction();
+    // TestParsingInstruction();
 
     return 0;
 }
@@ -66,7 +66,7 @@ static void TestAddFunctionCallAndComputation() {
         "mov    %rax,-0x8(%rbp)",   // 14
     };
     ac->rip = (uint64_t)&assembly[11];
-    sprintf(assembly[13], "call  $%p", &assembly[0]);
+    sprintf(assembly[13], "callq  $%p", &assembly[0]);
 
     printf("begin\n");
     int time = 0;

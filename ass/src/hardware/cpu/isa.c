@@ -512,8 +512,8 @@ static void push_handler(od_t *src_od, od_t *dst_od, core_t *cr) {
             *(uint64_t *)src,
             cr
         );
+        next_rip(cr);
     }
-    next_rip(cr);
     return;
 }
 static void pop_handler(od_t *src_od, od_t *dst_od, core_t *cr) {
@@ -545,7 +545,13 @@ static void call_handler(od_t *src_od, od_t *dst_od, core_t *cr) {
     return;
 }
 static void ret_handler(od_t *src_od, od_t *dst_od, core_t *cr) {
-
+    uint64_t ret_addr = read64bits_dram(
+        va2pa((cr->reg).rsp, cr),
+        cr
+        );
+    (cr->reg).rsp = (cr->reg).rsp + 8;
+    // jump to return address
+    cr->rip = ret_addr;
 }
 static void add_handler(od_t *src_od, od_t *dst_od, core_t *cr) {
     uint64_t src = decode_operand(src_od);
@@ -583,9 +589,13 @@ static void jmp_handler(od_t *src_od, od_t *dst_od, core_t *cr) {
 // instruction cycle is implemented in CPU
 // the only exposed interface outside CPU
 void instruction_cycle(core_t *cr) {
-     // FETCH: get the instruction string by program counter
-    char inst_str[MAX_INSTRUCTION_CHAR + 10];
-    readinst_dram(va2pa(cr->rip, cr), inst_str, cr);
+    // FETCH: get the instruction string by program counter
+    
+    // add
+    const char *inst_str = (const char *)cr->rip;
+    // sum
+    // char inst_str[MAX_INSTRUCTION_CHAR + 10] = {'\0'};
+    // readinst_dram(va2pa(cr->rip, cr), inst_str, cr);
 
     debug_printf(DEBUG_INSTRUCTIONCYCLE, "%8lx    %s\n", cr->rip, inst_str);
 
@@ -635,7 +645,7 @@ void TestParsingOperand()
     core_t *ac = (core_t *)&cores[ACTIVE_CORE];
 
     const char *strs[11] = {
-        "$0x1234",
+        "$0x7ffd3b4dae80",
         "%rax",
         "0xabcd",
         "(%rsp)",
