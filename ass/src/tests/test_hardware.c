@@ -9,8 +9,14 @@
 
 static void TestAddFunctionCallAndComputation();
 
+void TestParsingOperand();
+void TestParsingInstruction();
+
 int main(int argc, char *argv[]) {
     TestAddFunctionCallAndComputation();
+    
+    // TestParsingOperand();
+    TestParsingInstruction();
 
     return 0;
 }

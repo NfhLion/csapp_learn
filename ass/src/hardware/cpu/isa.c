@@ -181,9 +181,8 @@ static void parse_instruction(const char *str, inst_t *inst, core_t *cr) {
     char c;
     int count_parentheses = 0;
     int state = 0;
-    int i = 0;
 
-    for (i = 0; i < strlen(str); ++i) {
+    for (int i = 0; i < strlen(str); ++i) {
         
         c = str[i];
         if (c == '(' || c == ')') {
@@ -210,12 +209,15 @@ static void parse_instruction(const char *str, inst_t *inst, core_t *cr) {
         if (state == 1) {
             op_str[op_len] = c;
             op_len++;
+            continue;
         } else if (state == 3) {
             src_str[src_len] = c;
             src_len++;
+            continue;
         } else if (state == 5) {
             dst_str[dst_len] = c;
             dst_len++;
+            continue;
         }
     }
 
@@ -378,7 +380,7 @@ static void parse_operand(const char *str, od_t *od, core_t *cr) {
         // parse scale
         if (scal_len > 0)
         {
-            od->imm = string2uint(scal);
+            od->scal = string2uint(scal);
             if (od->scal != 1 && od->scal != 2 && od->scal != 4 && od->scal != 8)
             {
                 debug_printf(DEBUG_PARSEINST, "parse operand %s\n    scale number %s must be 1,2,4,8\n", scal);
@@ -595,4 +597,71 @@ void instruction_cycle(core_t *cr) {
     handler_t handler = handler_table[inst.op];
     // update CPU and memory according the instruction
     handler(&(inst.src), &(inst.dst), cr);
+}
+
+void TestParsingInstruction()
+{
+    ACTIVE_CORE = 0x0;    
+    core_t *ac = (core_t *)&cores[ACTIVE_CORE];
+
+    char assembly[15][MAX_INSTRUCTION_CHAR] = {
+        "push   %rbp",              // 0
+        "mov    %rsp,%rbp",         // 1
+        "mov    %rdi,-0x18(%rbp)",  // 2
+        "mov    %rsi,-0x20(%rbp)",  // 3
+        "mov    -0x18(%rbp),%rdx",  // 4
+        "mov    -0x20(%rbp),%rax",  // 5
+        "add    %rdx,%rax",         // 6
+        "mov    %rax,-0x8(%rbp)",   // 7
+        "mov    -0x8(%rbp),%rax",   // 8
+        "pop    %rbp",              // 9
+        "retq",                     // 10
+        "mov    %rdx,%rsi",         // 11
+        "mov    %rax,%rdi",         // 12
+        "callq  0",                 // 13
+        "mov    %rax,-0x8(%rbp)",   // 14
+    };
+    
+    inst_t inst;
+    for (int i = 0; i < 15; ++ i)
+    {
+        parse_instruction(assembly[i], &inst, ac);
+    }
+}
+
+void TestParsingOperand()
+{
+    ACTIVE_CORE = 0x0;    
+    core_t *ac = (core_t *)&cores[ACTIVE_CORE];
+
+    const char *strs[11] = {
+        "$0x1234",
+        "%rax",
+        "0xabcd",
+        "(%rsp)",
+        "0xabcd(%rsp)",
+        "(%rsp,%rbx)",
+        "0xabcd(%rsp,%rbx)",
+        "(,%rbx,8)",
+        "0xabcd(,%rbx,8)",
+        "(%rsp,%rbx,8)",
+        "0xabcd(%rsp,%rbx,8)",
+    };
+    
+    printf("rax %p\n", &(ac->reg.rax));
+    printf("rsp %p\n", &(ac->reg.rsp));
+    printf("rbx %p\n", &(ac->reg.rbx));
+    
+    for (int i = 0; i < 11; ++ i)
+    {
+        od_t od;
+
+        printf("\n%s\n", strs[i]);
+        parse_operand(strs[i], &od, ac);
+        printf("od enum type: %d\n", od.type);
+        printf("od imm: %lx\n", od.imm);
+        printf("od reg1: %lx\n", od.reg1);
+        printf("od reg2: %lx\n", od.reg2);
+        printf("od scal: %lx\n", od.scal);
+    }
 }
