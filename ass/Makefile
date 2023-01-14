@@ -22,6 +22,12 @@ TEST_HARDWARE = $(SRC_DIR)/tests/test_hardware.c
 hardware:
 	$(CC) $(CFLAGS) -I$(HEADERS) $(COMMON) $(CPU) $(MEMORY) $(TEST_HARDWARE) -o $(BIN_HARDWARE)
 
+.PHONY:link
+
+link:
+	$(CC) $(CFLAGS) -I$(HEADERS) $(COMMON) $(SRC_DIR)/tests/test_elf.c $(SRC_DIR)/linker/parseElf.c -o ./bin/test_elf
+	./bin/test_elf
+
 run:
 	./$(BIN_HARDWARE)
 
