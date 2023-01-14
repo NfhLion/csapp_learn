@@ -64,3 +64,132 @@
 1. 大端（存储）模式，是指数据的低位保存在内存的高地址中，而数据的高位保存在内存的低地址中;
 3. 小端（存储）模式，是指数据的低位保存在内存的低地址中，而数据的高位保存在内存的高地址中;
    - 例如：`Intel x86`系列的CPU。
+
+
+
+## 第七章
+
+### 一. ELF文件
+
+<img src="/Users/fenghaining/work/csapp_learn/learnNode/assets/image-20221223144207206.png" alt="image-20221223144207206" style="zoom:50%;" />
+
+**`ELF`文件头信息**：
+
+```c
+/* The ELF file header.  This appears at the start of every ELF file.  */
+
+#define EI_NIDENT (16)
+
+typedef struct
+{
+  unsigned char e_ident[EI_NIDENT];     /* Magic number and other info */						***
+  Elf64_Half    e_type;                 /* Object file type */
+  Elf64_Half    e_machine;              /* Architecture */
+  Elf64_Word    e_version;              /* Object file version */
+  Elf64_Addr    e_entry;                /* Entry point virtual address */
+  Elf64_Off     e_phoff;                /* Program header table file offset */
+  Elf64_Off     e_shoff;                /* Section header table file offset */			***
+  Elf64_Word    e_flags;                /* Processor-specific flags */
+  Elf64_Half    e_ehsize;               /* ELF header size in bytes */							***
+  Elf64_Half    e_phentsize;            /* Program header table entry size */
+  Elf64_Half    e_phnum;                /* Program header table entry count */
+  Elf64_Half    e_shentsize;            /* Section header table entry size */				***
+  Elf64_Half    e_shnum;                /* Section header table entry count */			***
+  Elf64_Half    e_shstrndx;             /* Section header string table index */
+} Elf64_Ehdr;
+```
+
+如上其中我们先不关注与`Program`相关的字段。
+
+<img src="/Users/fenghaining/work/csapp_learn/learnNode/assets/image-20221223145303072.png" alt="image-20221223145303072" style="zoom:50%;" />
+
+- 从上图可以得到`ELF`文件大小是：`size = e_shoff + e_shnum * e_shentsize`
+
+**`Section Header table`，节头部表**:
+
+```c
+ === > readelf -S elf_test.o
+There are 12 section headers, starting at offset 0x308:
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  [ 1] .text             PROGBITS         0000000000000000  00000040
+       0000000000000016  0000000000000000  AX       0     0     1
+  [ 2] .data             PROGBITS         0000000000000000  00000058
+       0000000000000010  0000000000000000  WA       0     0     8
+  [ 3] .bss              NOBITS           0000000000000000  00000068
+       0000000000000000  0000000000000000  WA       0     0     1
+  [ 4] .comment          PROGBITS         0000000000000000  00000068
+       000000000000002c  0000000000000001  MS       0     0     1
+  [ 5] .note.GNU-stack   PROGBITS         0000000000000000  00000094
+       0000000000000000  0000000000000000           0     0     1
+  [ 6] .note.gnu.propert NOTE             0000000000000000  00000098
+       0000000000000020  0000000000000000   A       0     0     8
+  [ 7] .eh_frame         PROGBITS         0000000000000000  000000b8
+       0000000000000058  0000000000000000   A       0     0     8
+  [ 8] .rela.eh_frame    RELA             0000000000000000  00000270
+       0000000000000030  0000000000000018   I       9     7     8
+  [ 9] .symtab           SYMTAB           0000000000000000  00000110
+       0000000000000138  0000000000000018          10     9     8
+  [10] .strtab           STRTAB           0000000000000000  00000248
+       0000000000000024  0000000000000000           0     0     1
+  [11] .shstrtab         STRTAB           0000000000000000  000002a0
+       0000000000000067  0000000000000000           0     0     1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  l (large), p (processor specific)
+    
+对应Section Header的struct为：
+typedef struct
+{
+  Elf64_Word	sh_name;		/* Section name (string tbl index) */			***
+  Elf64_Word	sh_type;		/* Section type */												***
+  Elf64_Xword	sh_flags;		/* Section flags */												***
+  Elf64_Addr	sh_addr;		/* Section virtual addr at execution */		***
+  Elf64_Off	sh_offset;		/* Section file offset */									***
+  Elf64_Xword	sh_size;		/* Section size in bytes */								***
+  Elf64_Word	sh_link;		/* Link to another section */
+  Elf64_Word	sh_info;		/* Additional section information */
+  Elf64_Xword	sh_addralign;		/* Section alignment */
+  Elf64_Xword	sh_entsize;		/* Entry size if section holds table */	***
+} Elf64_Shdr; 
+```
+
+- `.strtab`不是一个字符串表，而是一个由多个字符串组织成的一个超大的字符串（每单个字符串之间是由\0隔开）。 
+
+**`symbol table`**
+
+- 作用
+
+![image-20230104145904893](/Users/fenghaining/work/csapp_learn/learnNode/assets/image-20230104145904893.png)
+
+- ```c
+  typedef struct
+  {
+    Elf64_Word	st_name;			/* Symbol name (string tbl index) */		表示在str tab里的偏移量
+    unsigned char	st_info;		/* Symbol type and binding */						Bind(STB) | type(STT)
+    unsigned char st_other;		/* Symbol visibility */
+    Elf64_Section	st_shndx;		/* Section index */											表示是哪一个section和UDEF、COMMON等 
+    Elf64_Addr	st_value;			/* Symbol value */											表示当前symbol的起始位置
+    Elf64_Xword	st_size;			/* Symbol size */												表示该符号的大小
+  } Elf64_Sym;
+  
+  // 符号的位置：
+  /*
+  Start:
+  Elf64_Shdr[Elf64_Sym.st_shndx].sh_offset + Elf64_Sym.st_value
+  End:
+  Start + Elf64_Sym.size - 1
+  
+  ELF[Start, End] ---> Symbol
+  */ 
+  ```
+
+- 映射过程
+
+  ![image-20230104160505686](/Users/fenghaining/work/csapp_learn/learnNode/assets/image-20230104160505686.png)
